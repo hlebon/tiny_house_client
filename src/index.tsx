@@ -1,12 +1,11 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import reportWebVitals from "./reportWebVitals";
-
-const App = () => <h1>Hello world</h1>;
+import { Listings } from "./sections/listings";
 
 ReactDOM.render(
   <React.StrictMode>
-    <App />
+    <Listings title="TinyHouse Listings" />
   </React.StrictMode>,
   document.getElementById("root")
 );
