@@ -1,4 +1,5 @@
 import { server } from "../../lib";
+import { ListingData } from "./types";
 
 const LISTINGS = `
     query Listings {
@@ -8,6 +9,10 @@ const LISTINGS = `
             image
             address
             price
+            numOfGuests
+            numOfBeds
+            numOfBaths
+            rating
         }
     }
 `;
@@ -18,8 +23,8 @@ interface ListingsProps {
 
 export function Listings({ title }: ListingsProps) {
   const fetchListings = async () => {
-    const listings = await server.fetch({ query: LISTINGS });
-    console.log({ listings });
+    const { data } = await server.fetch<ListingData>({ query: LISTINGS });
+    console.log({ data });
   };
   return (
     <div>
