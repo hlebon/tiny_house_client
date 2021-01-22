@@ -1,5 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
-import { server } from "../../lib";
+import { server, useQuery } from "../../lib";
 import { Listing } from "./types";
 import {
   ListingData,
@@ -36,19 +35,7 @@ interface ListingsProps {
 }
 
 export function Listings({ title }: ListingsProps) {
-  const [listings, setListings] = useState<Listing[]>([]);
-
-  const fetchListings = useCallback(() => {
-    const getListings = async () => {
-      const { data } = await server.fetch<ListingData>({ query: LISTINGS });
-      setListings(data.listings);
-    };
-    getListings();
-  }, []);
-
-  useEffect(() => {
-    fetchListings();
-  }, [fetchListings]);
+  const { data, refetch } = useQuery<ListingData>(LISTINGS);
 
   const deleteListing = async (id: string) => {
     await server.fetch<DeleteListingData, DeleteListingVariables>({
@@ -57,15 +44,10 @@ export function Listings({ title }: ListingsProps) {
         id,
       },
     });
-    removeFromListing(id);
+    refetch();
   };
 
-  const removeFromListing = (id: string) => {
-    setListings((currentListings) =>
-      currentListings.filter((listing) => listing.id !== id)
-    );
-  };
-
+  const listings = data ? data.listings : [];
   const listingsList = (
     <ul>
       {listings.map(({ id, title }) => {
@@ -85,7 +67,6 @@ export function Listings({ title }: ListingsProps) {
     <div>
       <h1>{title}</h1>
       <ul>{listingsList}</ul>
-      <button onClick={fetchListings}>Query Listing</button>
     </div>
   );
 }
