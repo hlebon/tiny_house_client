@@ -1,5 +1,4 @@
 import { server, useQuery } from "../../lib";
-import { Listing } from "./types";
 import {
   ListingData,
   DeleteListingData,
@@ -35,7 +34,7 @@ interface ListingsProps {
 }
 
 export function Listings({ title }: ListingsProps) {
-  const { data, refetch } = useQuery<ListingData>(LISTINGS);
+  const { data, isLoading, error, refetch } = useQuery<ListingData>(LISTINGS);
 
   const deleteListing = async (id: string) => {
     await server.fetch<DeleteListingData, DeleteListingVariables>({
@@ -46,6 +45,14 @@ export function Listings({ title }: ListingsProps) {
     });
     refetch();
   };
+
+  if (isLoading) {
+    return <h2>Loading...</h2>;
+  }
+
+  if (error) {
+    return <h2>Ups! something went wrong, please try again</h2>;
+  }
 
   const listings = data ? data.listings : [];
   const listingsList = (
