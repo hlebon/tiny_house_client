@@ -7,6 +7,10 @@ interface State<TData> {
   error: boolean;
 }
 
+interface QueryResult<TData> extends State<TData> {
+  refetch: () => void;
+}
+
 const mergeState = <TData>(newState: Partial<State<TData>>) => (
   oldState: State<TData>
 ) => {
@@ -16,7 +20,7 @@ const mergeState = <TData>(newState: Partial<State<TData>>) => (
   };
 };
 
-export const useQuery = <TData = any>(query: string) => {
+export const useQuery = <TData = any>(query: string): QueryResult<TData> => {
   const [state, setState] = useState<State<TData>>({
     data: null,
     isLoading: false,

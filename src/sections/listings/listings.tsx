@@ -1,4 +1,4 @@
-import { server, useQuery } from "../../lib";
+import { useQuery, useMutation } from "../../lib";
 import {
   ListingData,
   DeleteListingData,
@@ -36,23 +36,32 @@ interface ListingsProps {
 export function Listings({ title }: ListingsProps) {
   const { data, isLoading, error, refetch } = useQuery<ListingData>(LISTINGS);
 
-  const deleteListing = async (id: string) => {
-    await server.fetch<DeleteListingData, DeleteListingVariables>({
-      query: DELETE_LISTING,
-      variables: {
-        id,
-      },
-    });
+  const [
+    deleteListing,
+    { loading: deleteLoading, error: deleteError },
+  ] = useMutation<DeleteListingData, DeleteListingVariables>(DELETE_LISTING);
+
+  const handleDeleteListing = async (id: string) => {
+    await deleteListing({ id });
     refetch();
   };
 
-  if (isLoading) {
-    return <h2>Loading...</h2>;
-  }
+  if (deleteLoading)
+    if (isLoading) {
+      return <h2>Loading...</h2>;
+    }
 
   if (error) {
     return <h2>Ups! something went wrong, please try again</h2>;
   }
+
+  const deleteListingLoadingMessage = deleteLoading ? (
+    <h4>Deletion in progress...</h4>
+  ) : null;
+
+  const deleteListingErrorMessage = deleteError ? (
+    <h4>Ups! Something went wrong with deleting, please try again</h4>
+  ) : null;
 
   const listings = data ? data.listings : [];
   const listingsList = (
@@ -61,7 +70,7 @@ export function Listings({ title }: ListingsProps) {
         return (
           <li key={id}>
             {title}
-            <button type="button" onClick={() => deleteListing(id)}>
+            <button type="button" onClick={() => handleDeleteListing(id)}>
               delete
             </button>
           </li>
@@ -74,6 +83,8 @@ export function Listings({ title }: ListingsProps) {
     <div>
       <h1>{title}</h1>
       <ul>{listingsList}</ul>
+      {deleteListingErrorMessage}
+      {deleteListingLoadingMessage}
     </div>
   );
 }
