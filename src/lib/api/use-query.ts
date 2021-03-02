@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useEffect, useReducer, useCallback } from "react";
 import { server } from "./server";
 
 interface State<TData> {
@@ -11,35 +11,59 @@ interface QueryResult<TData> extends State<TData> {
   refetch: () => void;
 }
 
-const mergeState = <TData>(newState: Partial<State<TData>>) => (
-  oldState: State<TData>
-) => {
-  return {
-    ...oldState,
-    ...newState,
-  };
+type Action<TData> =
+  | { type: "FETCH" }
+  | { type: "FETCH_SUCCESS"; payload: TData }
+  | { type: "FETCH_ERROR" };
+
+const reducer = <TData>() => (
+  state: State<TData>,
+  action: Action<TData>
+): State<TData> => {
+  switch (action.type) {
+    case "FETCH":
+      return {
+        ...state,
+        isLoading: true,
+      };
+    case "FETCH_SUCCESS":
+      return {
+        ...state,
+        isLoading: false,
+        error: false,
+        data: action.payload,
+      };
+    case "FETCH_ERROR":
+      return {
+        ...state,
+        isLoading: false,
+        error: true,
+      };
+    default:
+      throw new Error();
+  }
 };
 
 export const useQuery = <TData = any>(query: string): QueryResult<TData> => {
-  const [state, setState] = useState<State<TData>>({
-    data: null,
+  const fetchReducer = reducer<TData>();
+  const [state, dispatch] = useReducer(fetchReducer, {
     isLoading: false,
     error: false,
+    data: null,
   });
 
   const fetchAPI = useCallback(() => {
     const fetch = async () => {
       try {
-        setState(mergeState({ isLoading: true, error: false }));
+        dispatch({ type: "FETCH" });
         const { data, error } = await server.fetch<TData>({ query });
 
         if (error && error.length) {
           throw new Error(error[0].message);
         }
-
-        setState(mergeState({ data, isLoading: false, error: false }));
+        dispatch({ type: "FETCH_SUCCESS", payload: data });
       } catch (error) {
-        setState(mergeState({ error: true, isLoading: false }));
+        dispatch({ type: "FETCH_ERROR" });
         throw console.error(error);
       }
     };
